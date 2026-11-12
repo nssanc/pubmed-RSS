@@ -19,7 +19,7 @@
 
 ## 🔗 在线访问
 
-> **每日更新地址**: [https://fclynmedical.de5.net](https://www.google.com/search?q=https://fclynmedical.de5.net)
+> **每日更新地址**: [https://fclynmedical.de5.net](https://fclynmedical.de5.net)
 
 ---
 
@@ -67,8 +67,21 @@
 
 * **权限配置**：进入 `Settings` -> `Actions` -> `General`，在 `Workflow permissions` 中勾选 **Read and write permissions**。
 * **Pages 设置**：进入 `Settings` -> `Pages`，Source 选择 `Deploy from a branch`，分支选 `main`，文件夹选 `/docs`。
+* **运行环境**：GitHub Actions 使用 Python 3.13；本地建议使用 Python 3.11 或更高版本。
 
-### 2. 代码配置 (`main.py`)
+### 2. 本地运行
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python main.py
+```
+
+生成结果会写入 `docs/index.html` 和当天的 `docs/archive_YYYYMMDD.html`。
+
+### 3. 代码配置 (`main.py`)
 
 为了确保系统稳定运行，请修改 `main.py` 顶部的配置区：
 
@@ -81,7 +94,7 @@ CUSTOM_DOMAIN = "你的域名.com"
 
 ```
 
-### 3. 自定义域名配置 (Cloudflare)
+### 4. 自定义域名配置 (Cloudflare)
 
 如果你使用了 Cloudflare，请注意：
 
@@ -114,6 +127,14 @@ CUSTOM_DOMAIN = "你的域名.com"
 #### Q: 修改了 `feeds.txt` 但网页没变？
 
 **A:** 请检查 Actions 页面。如果显示绿色对号，可能是浏览器缓存。请强制刷新页面 (Ctrl+F5) 或稍等几分钟 Cloudflare 缓存更新。
+
+#### Q: Actions 提示 `The version '3.9' ... was not found for Ubuntu 26.04` ？
+
+**A:** `ubuntu-latest` 已升级到 Ubuntu 26.04，该 runner 不再提供 Python 3.9。本项目的工作流已改用 `actions/setup-python@v7` 和 Python 3.13。Fork 的旧版项目请同步 `.github/workflows/daily_run.yml`。
+
+#### Q: Actions 在没有生成变更时为什么没有新提交？
+
+**A:** 这是正常行为。工作流会先检查 `docs/` 是否有实际变化，没有变化时正常结束，避免把真实的 Git 错误误当成“无变更”忽略。
 
 #### Q: 为什么 Actions 提示 "InvalidDNSError"？
 

@@ -1,5 +1,9 @@
 name: Daily PubMed Update
 
+concurrency:
+  group: daily-pubmed-update
+  cancel-in-progress: false
+
 on:
   # 1. 定时触发：每天 UTC 0:00 (北京时间 8:00)
   schedule:
@@ -20,19 +24,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    timeout-minutes: 30
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v7
       with:
-        python-version: '3.9'
+        python-version: '3.13'
+        cache: pip
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install feedparser deep-translator pytz markdown biopython
+        python -m pip install -r requirements.txt
+
+    - name: Check Python syntax
+      run: python -m py_compile main.py
 
     - name: Run script
       run: python main.py
@@ -42,9 +52,10 @@ jobs:
         git config --global user.name 'GitHub Actions Bot'
         git config --global user.email 'actions@github.com'
         git add docs/
-        # 这一步尝试提交，如果没有新内容（比如今天没新论文）就不报错退出
-        git commit -m "Update Daily Papers [skip ci]" || exit 0
-        # === 关键修复点：推送前先拉取最新代码，防止冲突 ===
+        if git diff --cached --quiet; then
+          echo "No generated changes to commit."
+          exit 0
+        fi
+        git commit -m "Update Daily Papers [skip ci]"
         git pull --rebase origin main
-        # ================================================
         git push
